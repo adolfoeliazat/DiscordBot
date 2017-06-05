@@ -10,8 +10,8 @@ client.on('ready', () => {
 
 client.on('message', message => {
   //Noms et ids des salon vocaux
-  var channelArray = ['Music', 'S1', 'S2', 'S3', 'Dofus', 'MMORPG', 'LOL1', 'LOL2', 'CSGO', 'RL'];
-  var channelIdArray = ['306122580425834506', '173548541623402496', '173548573022093312', '173548653665845248', '300379395082682378', '319282707404161024', '159023107464626177', '283381636576575489', '159023019514265600', '202851392694648841'];
+  var channelArray = ['Music', 'S1', 'S2', 'S3', 'Dofus', 'MMORPG', 'LOL1', 'LOL2', 'CSGO', 'RL', 'AFK'];
+  var channelIdArray = ['306122580425834506', '173548541623402496', '173548573022093312', '173548653665845248', '300379395082682378', '319282707404161024', '159023107464626177', '283381636576575489', '159023019514265600', '202851392694648841', '190255116878741504'];
 
   //Noms et ids dans chats
   var chatArray = ['general', 'bot'];
@@ -74,6 +74,33 @@ client.on('message', message => {
        var moveTexte = replacedMoveText.split(' ', 2);
        var moveId;
 
+       //TODO
+       /*if (moveTexte[0] === 'multiple') {
+         var newReplacedMoveTexte = replacedMoveText.replace('multiple ', '');
+         var newMoveTexte = newReplacedMoveTexte.split(' ');
+
+          //Trouve l'id du salon ou envoyer les utilisateurs
+         for (var i = 0; i < channelArray.length; i++) {
+           if (channelArray[i].indexOf(newMoveTexte[1]) !== -1) {
+             moveId = channelIdArray[i];
+           }
+         }
+
+
+         //Trouve tous les membres à purge et les envoie dans le channel choisi
+
+         for (var i = 1; i < newMoveTexte.length; i++) {
+           var user = client.users.find('username', newMoveTexte[i]);
+          console.log(userId);
+           var userId = user.id;
+           console.log(userId);
+
+           user = guild.members.find('id', userId);
+           user.setVoiceChannel(moveId);
+           user.send('__**AVERTISSEMENT**__ Vous avez été changer de channel par un admin, faites attention à ne pas être dans le mauvais channel pour votre jeux !');
+         }
+
+       }*/
        //Trouve l'id du salon ou envoyer l'utilisateur
        for (var i = 0; i < channelArray.length; i++) {
          if (channelArray[i].indexOf(moveTexte[1]) !== -1) {
@@ -102,13 +129,50 @@ client.on('message', message => {
       var broadcastTexte = replacedBroadcastTexte.replace(chatTexte[0], '');
       var chat = client.channels.get(chatId);
       chat.send(broadcastTexte);
+    } else if (texteCommande.indexOf('afk') !== -1) {
+      var replacedAfkTexte = texteCommande.replace('afk ', '');
+
+      var user = client.users.find('username', replacedAfkTexte);
+      var userId = user.id;
+      user = guild.members.find('id', userId);
+      user.setVoiceChannel(client.channels.get('190255116878741504'));
+    } else if (texteCommande.indexOf('mute') !== -1) {
+      var replacedMuteTexte = texteCommande.replace('mute ', '');
+      var user = client.users.find('username', replacedMuteTexte);
+      var userId = user.id;
+      user = guild.members.find('id', userId);
+
+      if (user.serverMute) {
+        user.setMute(false);
+      } else {
+        user.setMute(true);
+      }
     }
     /******************************
      * COMMANDES DU SALON GENERAL *
      ******************************/
   } else if (message.channel.name === 'general') {
-    if (message.content.indexOf('!purge') !== -1) {
-      message.reply('a essayé de purge mais n\'était pas asser puissant !')
+    if (message.content.indexOf('!purge') !== -1 || message.content.indexOf('!move') !== -1) {
+      message.reply('je n\'ai pas de raisons de vous écouter !');
+    }
+    /*********************************
+     * COMMANDES DES MESSAGES PRIVÉS *
+     *********************************/
+  } else {
+    if (texteCommande.indexOf('broadcast') !== -1) {
+      var replacedBroadcastTexte = texteCommande.replace('broadcast ', '');
+      var chatTexte = replacedBroadcastTexte.split(' ', 1);
+      var chatId;
+
+      for (var i = 0; i < chatArray.length; i++) {
+        if (chatArray[i].indexOf(chatTexte[0]) !== -1) {
+          chatId = chatIdArray[i];
+        }
+      }
+
+      var broadcastTexte = replacedBroadcastTexte.replace(chatTexte[0], '');
+      var chat = client.channels.get(chatId);
+      chat.send(broadcastTexte);
     }
   }
 });
