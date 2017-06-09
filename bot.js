@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+var opusscript = require("opusscript");
 const client = new Discord.Client();
 
 client.login('Mjg5NDUzNjA1NTI0NzMzOTUy.DBNDGw.TynFOFo7NcPtkodh5i10JLbeogk');
@@ -20,9 +21,12 @@ client.on('message', message => {
   //ID du serveur
   var guild = client.guilds.get('159022801058136064');
 
-  var prefix = '!' //Peut être changer dans le futur !
-  var texte = message.content;
-  var texteCommande = texte.replace(prefix, ""); //Enlève le préfixe de commandes choisi pour faciliter la programmation
+  //Préfixe des commandes => !commandes, !purge
+  var prefix = '!'
+
+  //Retire le préfixe du texte
+  var texte = message.content; //prend le texte complet
+  var texteCommande = texte.replace(prefix, "");
 
   /**************************
    * COMMANDES DU SALON BOT *
@@ -74,33 +78,8 @@ client.on('message', message => {
        var moveTexte = replacedMoveText.split(' ', 2);
        var moveId;
 
-       //TODO
-       /*if (moveTexte[0] === 'multiple') {
-         var newReplacedMoveTexte = replacedMoveText.replace('multiple ', '');
-         var newMoveTexte = newReplacedMoveTexte.split(' ');
+       //TODO move plusieurs personnes
 
-          //Trouve l'id du salon ou envoyer les utilisateurs
-         for (var i = 0; i < channelArray.length; i++) {
-           if (channelArray[i].indexOf(newMoveTexte[1]) !== -1) {
-             moveId = channelIdArray[i];
-           }
-         }
-
-
-         //Trouve tous les membres à purge et les envoie dans le channel choisi
-
-         for (var i = 1; i < newMoveTexte.length; i++) {
-           var user = client.users.find('username', newMoveTexte[i]);
-          console.log(userId);
-           var userId = user.id;
-           console.log(userId);
-
-           user = guild.members.find('id', userId);
-           user.setVoiceChannel(moveId);
-           user.send('__**AVERTISSEMENT**__ Vous avez été changer de channel par un admin, faites attention à ne pas être dans le mauvais channel pour votre jeux !');
-         }
-
-       }*/
        //Trouve l'id du salon ou envoyer l'utilisateur
        for (var i = 0; i < channelArray.length; i++) {
          if (channelArray[i].indexOf(moveTexte[1]) !== -1) {
@@ -147,18 +126,31 @@ client.on('message', message => {
       } else {
         user.setMute(true);
       }
-    }
-    /******************************
-     * COMMANDES DU SALON GENERAL *
-     ******************************/
-  } else if (message.channel.name === 'general') {
-    if (message.content.indexOf('!purge') !== -1 || message.content.indexOf('!move') !== -1) {
-      message.reply('je n\'ai pas de raisons de vous écouter !');
+    } else if (texteCommande.indexOf('join') !== -1) {
+      var serverId = message.member.voiceChannelID;
+      console.log(serverId);
+      var serverToJoin = client.channels.get(serverId);
+
+      serverToJoin.join();
+    } else if (texteCommande.indexOf('quit') !== -1) {
+      var serverId = message.member.voiceChannelID;
+      console.log(serverId);
+      var serverToJoin = client.channels.get(serverId);
+
+      serverToJoin.leave();
+    } else if (texteCommande.indexOf('leeroy') !== -1) {
+      var serverId = message.member.voiceChannelID;
+      console.log(serverId);
+      var serverToJoin = client.channels.get(serverId);
+
+      serverToJoin.join();
+
+      serverToJoin.leave();
     }
     /*********************************
      * COMMANDES DES MESSAGES PRIVÉS *
      *********************************/
-  } else {
+  } else if (message.channel.type === 'dm'){
     if (texteCommande.indexOf('broadcast') !== -1) {
       var replacedBroadcastTexte = texteCommande.replace('broadcast ', '');
       var chatTexte = replacedBroadcastTexte.split(' ', 1);
