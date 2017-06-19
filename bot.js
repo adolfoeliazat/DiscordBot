@@ -4,10 +4,14 @@
 
 //TODO CLEANING DU CODE - création de fonction réutilisable si nécessaire, etc...
 const Discord = require('discord.js');
+<<<<<<< HEAD
 const opusscript = require("opusscript");
 const ytdl = require('ytdl-core');
 const streamOptions = { seek: 0, volume: 1 };
 
+=======
+var opusscript = require("opusscript");
+>>>>>>> 24aa47d59bc9b02c7fd5cdd358b0f218089d323f
 const client = new Discord.Client();
 
 var alreadyPlaying = false;
@@ -175,6 +179,7 @@ client.on('message', message => {
       } else {
         user.setMute(true);
       }
+<<<<<<< HEAD
     } else if (texteCommande.indexOf('leeroy') !== -1) {
       var serverId = message.member.voiceChannelID;
       voiceChannelBroadcast(serverId, 'sounds/Leeroy.mp3');
@@ -185,6 +190,28 @@ client.on('message', message => {
       alreadyPlaying = false;
       queueLength = queue.length;
       client.user.setGame('!commandes pour les commandes');
+=======
+    } else if (texteCommande.indexOf('join') !== -1) {
+      var serverId = message.member.voiceChannelID;
+      console.log(serverId);
+      var serverToJoin = client.channels.get(serverId);
+
+      serverToJoin.join();
+    } else if (texteCommande.indexOf('quit') !== -1) {
+      var serverId = message.member.voiceChannelID;
+      console.log(serverId);
+      var serverToJoin = client.channels.get(serverId);
+
+      serverToJoin.leave();
+    } else if (texteCommande.indexOf('leeroy') !== -1) {
+      var serverId = message.member.voiceChannelID;
+      console.log(serverId);
+      var serverToJoin = client.channels.get(serverId);
+
+      serverToJoin.join();
+
+      serverToJoin.leave();
+>>>>>>> 24aa47d59bc9b02c7fd5cdd358b0f218089d323f
     }
     /*********************************
      * COMMANDES DES MESSAGES PRIVÉS *
