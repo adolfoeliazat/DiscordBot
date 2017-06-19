@@ -1,14 +1,67 @@
+/*************************
+ * KEVEN IMBEAULT - 2017 *
+ *************************/
+
+//TODO CLEANING DU CODE - création de fonction réutilisable si nécessaire, etc...
 const Discord = require('discord.js');
+const opusscript = require("opusscript");
+const ytdl = require('ytdl-core');
+const streamOptions = { seek: 0, volume: 1 };
+
 const client = new Discord.Client();
+
+var alreadyPlaying = false;
+var queue = [];
+var queueLength = queue.length;
+var broadcast;
+var channelMusic;
 
 client.login('Mjg5NDUzNjA1NTI0NzMzOTUy.DBNDGw.TynFOFo7NcPtkodh5i10JLbeogk');
 
 client.on('ready', () => {
   console.log(`Le bot est lancé !`);
   client.user.setGame('!commandes pour les commandes');
+  broadcast = client.createVoiceBroadcast();
+  channelMusic = client.channels.get('306122580425834506');
 });
 
+//TODO pouvoir choisir quel channel join
+function voiceChannelBroadcast(serverId, filename){
+  var serverToJoin = client.channels.get(serverId);
+
+  const broadcast = client.createVoiceBroadcast();
+
+  serverToJoin.join()
+  .then(connection => {
+    broadcast.playFile(filename);
+    const dispatcher = connection.playBroadcast(broadcast);
+    broadcast.on('end', () => {
+      channelMusic.leave();
+    });
+  })
+  .catch(console.error);
+}
+
+//TODO supporter les playlists youtube et chansons/playlists soundcloud
+function streamMusic(replacedYtTexte) {
+  queueLength = queue.length;
+  const stream = ytdl(replacedYtTexte, { filter : 'audioonly' });
+  broadcast.playStream(stream);
+  broadcast.on('end', () => {
+    if (queueLength > 0) {
+      replacedYtTexte = queue[0];
+      queue.shift();
+      streamMusic(replacedYtTexte);
+      console.log(queue);
+    } else {
+      channelMusic.leave();
+      alreadyPlaying = false;
+    }
+  });
+}
+
 client.on('message', message => {
+
   //Noms et ids des salon vocaux
   var channelArray = ['Music', 'S1', 'S2', 'S3', 'Dofus', 'MMORPG', 'LOL1', 'LOL2', 'CSGO', 'RL', 'AFK'];
   var channelIdArray = ['306122580425834506', '173548541623402496', '173548573022093312', '173548653665845248', '300379395082682378', '319282707404161024', '159023107464626177', '283381636576575489', '159023019514265600', '202851392694648841', '190255116878741504'];
@@ -20,9 +73,12 @@ client.on('message', message => {
   //ID du serveur
   var guild = client.guilds.get('159022801058136064');
 
-  var prefix = '!' //Peut être changer dans le futur !
-  var texte = message.content;
-  var texteCommande = texte.replace(prefix, ""); //Enlève le préfixe de commandes choisi pour faciliter la programmation
+  //Préfixe des commandes => !commandes, !purge
+  var prefix = '!'
+
+  //Retire le préfixe du texte
+  var texte = message.content; //prend le texte complet
+  var texteCommande = texte.replace(prefix, "");
 
   /**************************
    * COMMANDES DU SALON BOT *
@@ -31,9 +87,6 @@ client.on('message', message => {
     if (texteCommande === 'commandes') {
       message.reply('Toutes les commandes pour les admins sont sur ce document : https://docs.google.com/document/d/1sP-z-wsfERoeswe9sq5gshL_fRO5QRriKwWyDFOxloo/edit?usp=sharing')
     } else if (texteCommande.indexOf('purge') !== -1) {
-      /**************************
-       *          PURGE         *
-       **************************/
        var purgeTexte = texteCommande.replace("purge ", "");
 
        var texteArray = [];
@@ -74,33 +127,8 @@ client.on('message', message => {
        var moveTexte = replacedMoveText.split(' ', 2);
        var moveId;
 
-       //TODO
-       /*if (moveTexte[0] === 'multiple') {
-         var newReplacedMoveTexte = replacedMoveText.replace('multiple ', '');
-         var newMoveTexte = newReplacedMoveTexte.split(' ');
+       //TODO move plusieurs personnes
 
-          //Trouve l'id du salon ou envoyer les utilisateurs
-         for (var i = 0; i < channelArray.length; i++) {
-           if (channelArray[i].indexOf(newMoveTexte[1]) !== -1) {
-             moveId = channelIdArray[i];
-           }
-         }
-
-
-         //Trouve tous les membres à purge et les envoie dans le channel choisi
-
-         for (var i = 1; i < newMoveTexte.length; i++) {
-           var user = client.users.find('username', newMoveTexte[i]);
-          console.log(userId);
-           var userId = user.id;
-           console.log(userId);
-
-           user = guild.members.find('id', userId);
-           user.setVoiceChannel(moveId);
-           user.send('__**AVERTISSEMENT**__ Vous avez été changer de channel par un admin, faites attention à ne pas être dans le mauvais channel pour votre jeux !');
-         }
-
-       }*/
        //Trouve l'id du salon ou envoyer l'utilisateur
        for (var i = 0; i < channelArray.length; i++) {
          if (channelArray[i].indexOf(moveTexte[1]) !== -1) {
@@ -147,18 +175,21 @@ client.on('message', message => {
       } else {
         user.setMute(true);
       }
-    }
-    /******************************
-     * COMMANDES DU SALON GENERAL *
-     ******************************/
-  } else if (message.channel.name === 'general') {
-    if (message.content.indexOf('!purge') !== -1 || message.content.indexOf('!move') !== -1) {
-      message.reply('je n\'ai pas de raisons de vous écouter !');
+    } else if (texteCommande.indexOf('leeroy') !== -1) {
+      var serverId = message.member.voiceChannelID;
+      voiceChannelBroadcast(serverId, 'sounds/Leeroy.mp3');
+
+    } else if (texteCommande.indexOf('forcequit') !== -1) {
+      channelMusic.leave();
+      queue = [];
+      alreadyPlaying = false;
+      queueLength = queue.length;
+      client.user.setGame('!commandes pour les commandes');
     }
     /*********************************
      * COMMANDES DES MESSAGES PRIVÉS *
      *********************************/
-  } else {
+  } else if (message.channel.type === 'dm'){
     if (texteCommande.indexOf('broadcast') !== -1) {
       var replacedBroadcastTexte = texteCommande.replace('broadcast ', '');
       var chatTexte = replacedBroadcastTexte.split(' ', 1);
@@ -173,6 +204,29 @@ client.on('message', message => {
       var broadcastTexte = replacedBroadcastTexte.replace(chatTexte[0], '');
       var chat = client.channels.get(chatId);
       chat.send(broadcastTexte);
+    } else if (texteCommande.indexOf('yt') !== -1) {
+      client.user.setGame('DJ du channel Music !');
+      var replacedYtTexte = texteCommande.replace('yt ', '');
+
+      console.log(alreadyPlaying);
+
+      if (alreadyPlaying == false) {
+        alreadyPlaying = true;
+        console.log(alreadyPlaying);
+        channelMusic.join()
+        .then(connection => {
+          var i = 0;
+          streamMusic(replacedYtTexte);
+          const dispatcher = connection.playBroadcast(broadcast);
+
+        })
+        .catch(console.error);
+      } else {
+          queue.push(replacedYtTexte);
+          queueLength = queue.length;
+          console.log(queue, queueLength);
+      }
+
     }
   }
 });
